@@ -57,7 +57,9 @@ First we need to only take **complete cases** to exclude NA values and then grou
 
 ```r
 summary.stepsperday <- summarize(group_by(DF[complete.cases(DF),], date), 
-                                 totalSteps=sum(steps, na.rm=TRUE))
+                                 totalSteps=sum(steps, na.rm=TRUE),
+                                 mean=mean(steps, na.rm=TRUE),
+                                 median=median(steps, na.rm=TRUE))
 ```
 
 1. total steps per day
@@ -68,27 +70,27 @@ summary.stepsperday
 ```
 
 ```
-## Source: local data frame [53 x 2]
+## Source: local data frame [53 x 4]
 ## 
-##          date totalSteps
-## 1  2012-10-02        126
-## 2  2012-10-03      11352
-## 3  2012-10-04      12116
-## 4  2012-10-05      13294
-## 5  2012-10-06      15420
-## 6  2012-10-07      11015
-## 7  2012-10-09      12811
-## 8  2012-10-10       9900
-## 9  2012-10-11      10304
-## 10 2012-10-12      17382
-## ..        ...        ...
+##          date totalSteps     mean median
+## 1  2012-10-02        126  0.43750      0
+## 2  2012-10-03      11352 39.41667      0
+## 3  2012-10-04      12116 42.06944      0
+## 4  2012-10-05      13294 46.15972      0
+## 5  2012-10-06      15420 53.54167      0
+## 6  2012-10-07      11015 38.24653      0
+## 7  2012-10-09      12811 44.48264      0
+## 8  2012-10-10       9900 34.37500      0
+## 9  2012-10-11      10304 35.77778      0
+## 10 2012-10-12      17382 60.35417      0
+## ..        ...        ...      ...    ...
 ```
 
 2. histogram of the total number of steps taken each day
 
 
 ```r
-hist(summary.stepsperday$totalSteps, col =' gray80',
+hist(summary.stepsperday$totalSteps, breaks=10, col =' gray80',
       xlab = "Steps Per Day",
 main = "Daily steps frequency analysis" )
 ```
@@ -97,7 +99,6 @@ main = "Daily steps frequency analysis" )
 
 3. report the mean and median of the total number of steps taken per day
 
-
 ```r
 summary(summary.stepsperday$totalSteps)
 ```
@@ -105,6 +106,29 @@ summary(summary.stepsperday$totalSteps)
 ```
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##      41    8841   10760   10770   13290   21190
+```
+
+Additionally, the mean and median for each day is,
+
+```r
+summary.stepsperday[,c(1,3,4)]
+```
+
+```
+## Source: local data frame [53 x 3]
+## 
+##          date     mean median
+## 1  2012-10-02  0.43750      0
+## 2  2012-10-03 39.41667      0
+## 3  2012-10-04 42.06944      0
+## 4  2012-10-05 46.15972      0
+## 5  2012-10-06 53.54167      0
+## 6  2012-10-07 38.24653      0
+## 7  2012-10-09 44.48264      0
+## 8  2012-10-10 34.37500      0
+## 9  2012-10-11 35.77778      0
+## 10 2012-10-12 60.35417      0
+## ..        ...      ...    ...
 ```
 
 ###2. average daily activity pattern
@@ -139,7 +163,7 @@ plot(summary.avgstepsperinterval$interval, summary.avgstepsperinterval$avgSteps,
      main="Average steps of 5 minute interval")
 ```
 
-![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9-1.png) 
+![plot of chunk unnamed-chunk-10](figure/unnamed-chunk-10-1.png) 
 
 3. 5-minute interval, on average across all the days in the dataset, containing the maximum number of steps
 
@@ -168,7 +192,7 @@ length(which(is.na(DF$steps)))
 
 2. filling in all of the missing values in the dataset
 
-Fill the missing values in data set by the mean for that interval over all days
+For imputing the data, we will fill the missing values in data set by the mean for that interval over all days.
 
 
 ```r
@@ -184,7 +208,7 @@ merged.data[merged.steps.na,2]<- merged.data[merged.steps.na, 4]
 NEWDF <- arrange(select(merged.data, steps, date, interval), date, interval)
 ```
 
-4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. 
 
 
 ```r
@@ -195,7 +219,7 @@ hist(summary.new.stepsperday$totalSteps, breaks = 10, col =' gray80',
      main = "Daily steps frequency analysis of Imputed Data" )
 ```
 
-![plot of chunk unnamed-chunk-14](figure/unnamed-chunk-14-1.png) 
+![plot of chunk unnamed-chunk-15](figure/unnamed-chunk-15-1.png) 
 
 ```r
 summary(summary.new.stepsperday$totalSteps)
@@ -214,9 +238,9 @@ summary.merged.stepsperday<-bind_rows(mutate(summary.stepsperday, type="original
 ggplot(summary.merged.stepsperday, aes(date, totalSteps, color=factor(type)))+geom_line()
 ```
 
-![plot of chunk unnamed-chunk-15](figure/unnamed-chunk-15-1.png) 
+![plot of chunk unnamed-chunk-16](figure/unnamed-chunk-16-1.png) 
 
-> ***The mean and median after imputing the data have increased.*** 
+> ***The median after imputing the data has changed slightly.*** 
 
 ###4. differences in activity patterns between weekdays and weekends
 
@@ -239,7 +263,9 @@ xyplot(intervalStepsAvgByType$avgSteps ~ intervalStepsAvgByType$interval
         )
 ```
 
-![plot of chunk unnamed-chunk-17](figure/unnamed-chunk-17-1.png) 
+![plot of chunk unnamed-chunk-18](figure/unnamed-chunk-18-1.png) 
+
+The distribution of steps is more uniform on the weekends than on the weekdays. There is more activity on the weekends than during the weekdays when a reduced number of steps would be evident.
 
 
 

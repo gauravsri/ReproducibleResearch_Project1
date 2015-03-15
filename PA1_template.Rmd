@@ -34,13 +34,17 @@ DF<-mutate(DF, date=ymd(date))
 summary(DF)
 ```
 
-### total number of steps taken per day
+###1. total number of steps taken per day
 
 In order to calculate total steps taken per day, we can group the data by date and take a sum of it.
 
+First we need to only take **complete cases** to exclude NA values and then group it by date followed by summarizing the steps by groups.
+
 ```{r}
-summary.stepsperday <- summarize(group_by(DF, date), 
-                                 totalSteps=sum(steps, na.rm=TRUE))
+summary.stepsperday <- summarize(group_by(DF[complete.cases(DF),], date), 
+                                 totalSteps=sum(steps, na.rm=TRUE),
+                                 mean=mean(steps, na.rm=TRUE),
+                                 median=median(steps, na.rm=TRUE))
 ```
 
 1. total steps per day
@@ -52,18 +56,22 @@ summary.stepsperday
 2. histogram of the total number of steps taken each day
 
 ```{r}
-hist(summary.stepsperday$totalSteps, breaks = 10, col =' gray80',
+hist(summary.stepsperday$totalSteps, breaks=10, col =' gray80',
       xlab = "Steps Per Day",
 main = "Daily steps frequency analysis" )
 ```
 
 3. report the mean and median of the total number of steps taken per day
-
 ```{r}
 summary(summary.stepsperday$totalSteps)
 ```
 
-### average daily activity pattern
+Additionally, the mean and median for each day is,
+```{r}
+summary.stepsperday[,c(1,3,4)]
+```
+
+###2. average daily activity pattern
 
 1. calculate average steps per interval
 
@@ -88,7 +96,7 @@ summary.avgstepsperinterval[which.max(
     summary.avgstepsperinterval$avgSteps),]$interval
 ```
 
-### Imputing missing values
+###3. Imputing missing values
 
 1. report the total number of missing values in the dataset
 
@@ -98,7 +106,7 @@ length(which(is.na(DF$steps)))
 
 2. filling in all of the missing values in the dataset
 
-Fill the missing values in data set by the mean for that interval over all days
+For imputing the data, we will fill the missing values in data set by the mean for that interval over all days.
 
 ```{r}
 merged.data <- merge(DF, summary.avgstepsperinterval, "interval")
@@ -112,7 +120,7 @@ merged.data[merged.steps.na,2]<- merged.data[merged.steps.na, 4]
 NEWDF <- arrange(select(merged.data, steps, date, interval), date, interval)
 ```
 
-4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?
+4. Make a histogram of the total number of steps taken each day and Calculate and report the mean and median total number of steps taken per day. 
 
 ```{r}
 summary.new.stepsperday <- summarize(group_by(NEWDF, date), 
@@ -132,9 +140,9 @@ ggplot(summary.merged.stepsperday, aes(date, totalSteps, color=factor(type)))+ge
 
 ```
 
-> The mean and median after imputing the data have increased. 
+> ***The median after imputing the data has changed slightly.*** 
 
-### differences in activity patterns between weekdays and weekends
+###4. differences in activity patterns between weekdays and weekends
 
 1. Create a new factor variable in the dataset with two levels – “weekday” and “weekend” indicating whether a given date is a weekday or weekend day.
 
@@ -142,7 +150,7 @@ ggplot(summary.merged.stepsperday, aes(date, totalSteps, color=factor(type)))+ge
 NEWDF.days <- mutate(mutate(NEWDF, day=ifelse(wday(date) == 1 | wday(date)==7, "weekend", "weekday")), day=factor(day))
 ```
 
-2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). See the README file in the GitHub repository to see an example of what this plot should look like using simulated data.
+2. Make a panel plot containing a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). 
 
 ```{r}
 intervalStepsAvgByType <- summarise(group_by(NEWDF.days, day, interval), avgSteps=mean(steps))
@@ -152,6 +160,8 @@ xyplot(intervalStepsAvgByType$avgSteps ~ intervalStepsAvgByType$interval
         xlab = 'interval', ylab = 'Average steps'
         )
 ```
+
+The distribution of steps is more uniform on the weekends than on the weekdays. There is more activity on the weekends than during the weekdays when a reduced number of steps would be evident.
 
 
 
